@@ -1,0 +1,4 @@
+django-globus-portal-framework
+djangorestframework
+markdown
+django-filter
