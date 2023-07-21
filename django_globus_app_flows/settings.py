@@ -22,11 +22,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-mmbw7z%fsrgs78=54@qiqiu$)gzux^zmx*pq4!5j%=*fl9&kj+'
 
+PROJECT_TITLE = 'hello world!'
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
 
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
 
 # Application definition
 
@@ -37,6 +46,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'globus_portal_framework',
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -47,6 +59,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'globus_portal_framework.middleware.ExpiredTokenMiddleware',
+    'globus_portal_framework.middleware.GlobusAuthExceptionMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware',
+]
+
+# Authentication backends setup OAuth2 handling and where user data should be
+# stored
+AUTHENTICATION_BACKENDS = [
+    'globus_portal_framework.auth.GlobusOpenIdConnect',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = 'dgpf_flows.urls'
@@ -62,6 +84,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'globus_portal_framework.context_processors.globals',
             ],
         },
     },
@@ -121,3 +144,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+try:
+    from django_globus_app_flows.local_settings import *  # noqa
+except ImportError:
+    raise
