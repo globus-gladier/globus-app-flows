@@ -20,6 +20,9 @@ from django.urls import path
 from django.urls import path, include
 from django.contrib.auth.models import User
 from rest_framework import routers, serializers, viewsets
+from globus_app_flows.views import ReprocessQuery
+
+app_name = 'globus_app_flows'
 
 # Serializers define the API representation.
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -36,14 +39,20 @@ class UserViewSet(viewsets.ModelViewSet):
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
 
+standard_views = [
+    path('reprocess-query/', ReprocessQuery.as_view()),
+
+]
+
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
-    path('api/', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('admin/', admin.site.urls),
-    # Provides the basic search portal
-    path('', include('globus_portal_framework.urls')),
-    # Provides Login urls for Globus Auth
-    path('', include('social_django.urls', namespace='social')),
+    # path('api/', include(router.urls)),
+    # path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    # path('admin/', admin.site.urls),
+    # # Provides the basic search portal
+    # path('', include('globus_portal_framework.urls')),
+    # # Provides Login urls for Globus Auth
+    # path('', include('social_django.urls', namespace='social')),
+    path('', include(standard_views, namespace='globus_app_flows'))
 ]
