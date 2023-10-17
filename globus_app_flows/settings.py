@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'globus_portal_framework',
     'social_django',
+    'globus_app_flows',
 ]
 
 MIDDLEWARE = [
@@ -71,7 +72,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-ROOT_URLCONF = 'dgpf_flows.urls'
+ROOT_URLCONF = 'globus_app_flows.urls'
 
 TEMPLATES = [
     {
@@ -90,7 +91,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'dgpf_flows.wsgi.application'
+WSGI_APPLICATION = 'globus_app_flows.wsgi.application'
 
 
 # Database

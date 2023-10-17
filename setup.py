@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 # single source of truth for package version
 version_ns = {}
-with open(os.path.join('django_globus_app_flows', 'version.py')) as f:
+with open(os.path.join('globus_app_flows', 'version.py')) as f:
     exec(f.read(), version_ns)
 version = version_ns['__version__']
 
