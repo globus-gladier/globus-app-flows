@@ -1,12 +1,10 @@
 from abc import ABC
 
-# import globus_app_flows
-
 
 class Collector(ABC):
     import_string = None
-    run_authorization_type = "USER"
-    run_authorization_key = None
+    # run_authorization_type = "USER"
+    # run_authorization_key = None
 
     def __iter__(self):
         return self
@@ -26,17 +24,20 @@ class Collector(ABC):
     def get_run_input(self, collection_data, form_data):
         raise NotImplemented("Collector must implement the gut_run_input method!")
 
+    def get_run_start_kwargs(self, collection_data, form_data):
+        return {}
+
     def from_get_request(self, request, *args, **kwargs):
         raise NotImplemented("Collector does not support this")
 
     def get_metadata(self):
         raise NotImplemented("Collector does not implement this method.")
 
-    def get_authorization_type(self):
-        return self.run_authorization_type
+    # def get_authorization_type(self):
+    #     return self.run_authorization_type
 
-    def get_authorization_key(self):
-        return self.run_authorization_key
+    # def get_authorization_key(self):
+    #     return self.run_authorization_key
 
     @classmethod
     def get_import_string(cls):

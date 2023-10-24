@@ -8,10 +8,11 @@ from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 from django.utils.timezone import timezone
+from django import forms
 
 from globus_portal_framework.gsearch import get_template
 
-from globus_app_flows.models import Batch, Collector, Flow
+from globus_app_flows.models import Batch, Collector, Flow, FlowAuthorization
 
 from django.http import HttpResponse
 from django.views import View
@@ -24,6 +25,8 @@ class BatchCreateView(FormView):
     collector = None
     flow = None
     group = None
+    authorization_type = "User"
+    authorization_key = None
 
     def save_temp_collector(self, collector):
         log.debug(f"Saving collector in SESSION")
@@ -69,24 +72,44 @@ class BatchCreateView(FormView):
             )
         return Flow.objects.get(flow_id=self.flow)
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
+    def get_flow_authorization(
+        self, authorization_type: str, authorization_key: str, form: forms.Form = None
+    ) -> FlowAuthorization:
+        obj, created = FlowAuthorization.objects.get_or_create(
+            authorization_type=authorization_type, authorization_key=authorization_key
+        )
+        return obj
+
+    def get_collector(self):
         ctype = self.get_collector_class().get_import_string()
         collector = Collector(
             data=dict(self.load_collector()),
             user=self.request.user,
             collector_type=ctype,
         )
-        collector.save()
+        return collector
+
+    def get_batch(self, authorization, collector, form):
         batch = Batch(
             name="hello batch",
             user=self.request.user,
+            authorization=authorization,
             collector=collector,
             started=None,
             completed=None,
             flow=self.get_flow(),
         )
         batch.form = form.cleaned_data
+        return batch
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        authorization = self.get_flow_authorization(
+            self.authorization_type, self.authorization_key, form=form
+        )
+        collector = self.get_collector()
+        collector.save()
+        batch = self.get_batch(authorization, collector, form)
         batch.save()
 
         messages.success(self.request, f"Processing data in {batch}")

@@ -1,3 +1,4 @@
+import os
 from django.apps import AppConfig
 
 
@@ -6,6 +7,11 @@ class GlobusAppFlows(AppConfig):
 
     def ready(self):
         from globus_app_flows.collectors.worker import CollectionWorker
+        from globus_app_flows.flows.worker import RunWorkerQueue
 
-        cw = CollectionWorker()
-        cw.start()
+        if os.environ.get("RUN_MAIN"):
+            cw = CollectionWorker()
+            cw.start()
+
+            rw = RunWorkerQueue()
+            rw.start()

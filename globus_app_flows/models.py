@@ -3,6 +3,14 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+class FlowAuthorization(models.Model):
+    AUTHORIZATION_TYPES = ["USER", "CONFIDENTIAL_CLIENT", "CONFIDENTIAL_TOKEN"]
+    authorization_type = models.CharField(
+        max_length=128, choices=[(c, c) for c in AUTHORIZATION_TYPES], default="USER"
+    )
+    authorization_key = models.CharField(max_length=128, null=True, blank=True)
+
+
 class Flow(models.Model):
     flow_id = models.CharField(max_length=128, primary_key=True)
     flow_scope = models.CharField(max_length=128)
@@ -11,24 +19,31 @@ class Flow(models.Model):
 
 class Run(models.Model):
     # TODO: These need to be verified
-    STATUSES = ["IDLE", "READY", "STARTED", "RUNING", "COMPLETED", "FAILED"]
+    STATUSES = ["IDLE", "READY", "STARTED", "ACTIVE", "COMPLETED", "FAILED"]
     AUTHORIZATION_TYPES = ["USER", "CONFIDENTIAL_CLIENT", "CONFIDENTIAL_TOKEN"]
 
-    run_id = models.CharField(max_length=128)
+    run_id = models.CharField(max_length=128, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     flow = models.ForeignKey(Flow, on_delete=models.CASCADE)
     batch = models.ForeignKey("Batch", on_delete=models.CASCADE)
-    authorization_type = models.CharField(
-        max_length=128, choices=[(c, c) for c in AUTHORIZATION_TYPES], default="USER"
-    )
-    authorization_key = models.CharField(max_length=128, null=True, blank=True)
+    authorization = models.ForeignKey(FlowAuthorization, on_delete=models.CASCADE)
+    label = models.CharField(max_length=128)
     status = models.CharField(
         max_length=128, choices=[(c, c) for c in STATUSES], default="IDLE"
     )
     started = models.DateTimeField(null=True, blank=True)
     completed = models.DateTimeField(null=True, blank=True)
-    payload = models.TextField()
-    error_data = models.TextField()
+    start_kwargs_data = models.TextField(null=True, blank=True)
+    payload = models.TextField(null=True, blank=True)
+    error_data = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        entity = self.label or self.run_id or f"Run: {self.id}"
+        if self.status in ["ACTIVE"]:
+            info = f"Started {self.started}"
+        else:
+            info = f"Completed {self.completed}"
+        return f"{entity}: {self.status} | {self.completed}"
 
     @property
     def run_input(self):
@@ -37,6 +52,14 @@ class Run(models.Model):
     @run_input.setter
     def run_input(self, value: dict):
         self.payload = json.dumps(value)
+
+    @property
+    def start_kwargs(self):
+        return json.loads(self.start_kwargs_data or "{}")
+
+    @start_kwargs.setter
+    def start_kwargs(self, value: dict):
+        self.start_kwargs_data = json.dumps(value)
 
 
 class Deployment(models.Model):
@@ -51,6 +74,7 @@ class Batch(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     flow = models.ForeignKey(Flow, on_delete=models.CASCADE)
     collector = models.ForeignKey("Collector", on_delete=models.CASCADE)
+    authorization = models.ForeignKey(FlowAuthorization, on_delete=models.CASCADE)
     form_data = models.TextField()
     status = models.CharField(
         max_length=128, choices=[(c, c) for c in STATUSES], default="IDLE"
