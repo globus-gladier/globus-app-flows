@@ -9,6 +9,24 @@ class FlowAuthorization(models.Model):
         max_length=128, choices=[(c, c) for c in AUTHORIZATION_TYPES], default="USER"
     )
     authorization_key = models.CharField(max_length=128, null=True, blank=True)
+    authorization_cache = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.authorization_key} [{self.authorization_type}]"
+
+    @property
+    def cache(self) -> dict:
+        return json.loads(self.authorization_cache or "{}")
+
+    @cache.setter
+    def cache(self, value: dict):
+        self.authorization_cache = json.dumps(value)
+
+    def update_cache(self, value: dict):
+        cache = self.cache
+        cache.update(value)
+        self.cache = cache
+        self.save()
 
 
 class Flow(models.Model):

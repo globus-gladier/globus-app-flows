@@ -1,4 +1,6 @@
 import logging
+import time
+import typing as t
 import globus_sdk
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -6,18 +8,13 @@ from globus_app_flows.models import Flow, FlowAuthorization
 
 log = logging.getLogger(__name__)
 
-CC_SPECIFIC_FLOW_AUTHORIZATION_CACHE = {}
-CC_FLOWS_AUTHORIZATION_CACHE = {}
-
 
 def get_flows_client(
     authorization: FlowAuthorization, user: User
 ) -> globus_sdk.FlowsClient:
-    auth_types = {"CONFIDENTIAL_CLIENT": confidential_client_authorization}
-
     scopes = [globus_sdk.FlowsClient.scopes.run_status]
-    authorizer = auth_types[authorization.authorization_type](
-        "flows.globus.org", scopes, authorization.authorization_key, user
+    authorizer = confidential_client_authorization(
+        "flows.globus.org", scopes, authorization, user
     )
     return globus_sdk.FlowsClient(authorizer=authorizer)
 
@@ -25,32 +22,68 @@ def get_flows_client(
 def get_specific_flow_client(
     flow: Flow, authorization: FlowAuthorization, user: User
 ) -> globus_sdk.SpecificFlowClient:
-    auth_types = {"CONFIDENTIAL_CLIENT": confidential_client_authorization}
-    authorizer = CC_SPECIFIC_FLOW_AUTHORIZATION_CACHE.get(
-        authorization.authorization_key, None
-    )
-    authorizer = authorizer or auth_types[authorization.authorization_type](
-        flow.flow_id, [flow.flow_scope], authorization.authorization_key, user
-    )
+    auth_func = get_authorization_function(authorization)
+    authorizer = auth_func(flow.flow_id, [flow.flow_scope], authorization, user)
     return globus_sdk.SpecificFlowClient(flow.flow_id, authorizer=authorizer)
 
 
-def confidential_client_authorization(
-    resource_server, flow_scopes, auth_key, user=None
-):
-    log.critical(
-        "TOKEN CACHE NOT USED, IMPLEMENT THIS FEATURE BEFORE LARGE SCALE RUNS!"
-    )
-    cc_creds = settings.GLOBUS_APP_FLOWS_AUTHORIZATIONS["confidential_client"][auth_key]
+def get_authorization_function(authorization: FlowAuthorization):
+    auth_types = {"CONFIDENTIAL_CLIENT": confidential_client_authorization}
+    atype_auth = auth_types.get(authorization.authorization_key)
+    if atype_auth is None:
+        raise ValueError(
+            "Unable to authorize {flow}, invalid authorizor key {authorization.authorization_key} for flow authorizer {authorization}"
+        )
+    return atype_auth
+
+
+def refresh_tokens(
+    resource_server, flow_scopes, authorization: FlowAuthorization
+) -> t.Mapping[str, dict]:
+    cc_creds = settings.GLOBUS_APP_FLOWS_AUTHORIZATIONS["confidential_client"][
+        authorization.authorization_key
+    ]
     app = globus_sdk.ConfidentialAppAuthClient(
         cc_creds["client_id"], cc_creds["client_secret"]
     )
 
     response = app.oauth2_client_credentials_tokens(requested_scopes=flow_scopes)
     tokens = response.by_resource_server
-    authorizer = globus_sdk.AccessTokenAuthorizer(
-        tokens[resource_server]["access_token"]
+    authorization.update_cache(tokens)
+    log.debug(f"New tokens cached for {authorization}")
+    return tokens
+
+
+def _tokens_expired(tokens: dict) -> bool:
+    expired = time.time() >= tokens["expires_at_seconds"]
+    log.debug(
+        f'Tokens have expired for resource server {tokens["resource_server"]}: {expired}'
     )
+    return expired
+
+
+def _scopes_mismatch(tokens: dict, requested_scopes: t.List[str]) -> bool:
+    mismatch = bool(set(requested_scopes).difference(set(tokens["scope"].split())))
+    log.debug(f'Mismatch for resource server {tokens["resource_server"]}: {mismatch}')
+    return mismatch
+
+
+def confidential_client_authorization(
+    resource_server, flow_scopes, authorization: FlowAuthorization, user=None
+):
+    cache = authorization.cache
+    tokens = cache.get(resource_server)
+    if (
+        tokens is None
+        or _tokens_expired(tokens)
+        or _scopes_mismatch(tokens, flow_scopes)
+    ):
+        log.info(
+            f"Fetching new tokens for scopes {flow_scopes} under user {user} for authorization {authorization}"
+        )
+        tokens = refresh_tokens(resource_server, flow_scopes, authorization)
+
+    authorizer = globus_sdk.AccessTokenAuthorizer(tokens["access_token"])
     return authorizer
 
 
