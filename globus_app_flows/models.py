@@ -37,7 +37,7 @@ class Flow(models.Model):
 
 class Run(models.Model):
     # TODO: These need to be verified
-    STATUSES = ["IDLE", "READY", "STARTED", "ACTIVE", "COMPLETED", "FAILED"]
+    STATUSES = ["IDLE", "READY", "STARTED", "ACTIVE", "SUCCEEDED", "FAILED"]
     AUTHORIZATION_TYPES = ["USER", "CONFIDENTIAL_CLIENT", "CONFIDENTIAL_TOKEN"]
 
     run_id = models.CharField(max_length=128, blank=True, null=True)

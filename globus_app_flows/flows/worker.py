@@ -17,7 +17,7 @@ DGAF_SETTINGS = getattr(settings, "GLOBUS_APP_FLOWS", {})
 
 
 class RunWorkerQueue(SingleThreadedWorker):
-    FLOW_TERMINATED = ["SUCCEEDED", "FAILED", "CANCELED"]
+    FLOW_TERMINATED = ["SUCCEEDED", "FAILED"]
     CONCURRENT_RUNS = DGAF_SETTINGS.get("concurrent_runs", 10)
 
     def do_work(self):
@@ -59,6 +59,7 @@ class RunWorkerQueue(SingleThreadedWorker):
                 if run.status in self.FLOW_TERMINATED:
                     if run.status == "FALIED":
                         run.error_data = "Run failed during execution. More details in the flows service"
+                        run.completed = timezone.now()
                 run.save()
             except Exception as e:
                 run.error_data = str(e)
