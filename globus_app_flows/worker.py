@@ -1,15 +1,22 @@
 import threading
 import logging
 import time
+import signal
 
 log = logging.getLogger(__name__)
 
 
 class SingleThreadedWorker:
+    shutdown_flag = False
     workers = []
     max_workers = 2
 
+    def shutdown(self, *args):
+        log.debug(f"Shutdown initiated for {self}")
+        self.shutdown_flag = True
+
     def start(self):
+        signal.signal(signal.SIGINT, self.shutdown)
         if len(self.workers) >= self.max_workers:
             log.debug(f"{self}: Additional worker attempted to start, aborting!")
             return
@@ -19,9 +26,8 @@ class SingleThreadedWorker:
 
     def _run_thread(self):
         time.sleep(5)
-        while True:
+        while self.shutdown_flag is False:
             self.do_work()
-            log.debug(f"{self} tick...")
             time.sleep(5)
         log.info(f"{self}: Shutdown successful")
 
