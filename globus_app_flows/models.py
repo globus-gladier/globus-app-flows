@@ -43,8 +43,8 @@ class Run(models.Model):
     run_id = models.CharField(max_length=128, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     flow = models.ForeignKey(Flow, on_delete=models.CASCADE)
-    batch = models.ForeignKey("Batch", on_delete=models.CASCADE)
     authorization = models.ForeignKey(FlowAuthorization, on_delete=models.CASCADE)
+    batch = models.ForeignKey("Batch", on_delete=models.CASCADE, null=True)
     label = models.CharField(max_length=128)
     status = models.CharField(
         max_length=128, choices=[(c, c) for c in STATUSES], default="IDLE"
@@ -97,6 +97,8 @@ class Batch(models.Model):
     status = models.CharField(
         max_length=128, choices=[(c, c) for c in STATUSES], default="IDLE"
     )
+    # temporary = models.BooleanField()
+    created = models.DateTimeField(auto_now_add=True)
     started = models.DateTimeField(null=True, blank=True)
     completed = models.DateTimeField(null=True, blank=True)
 
@@ -110,7 +112,7 @@ class Batch(models.Model):
 
 
 class Collector(models.Model):
-    STATUSES = ["IDLE", "READY", "COLLECTING", "COMPLETED", "FAILED"]
+    STATUSES = ["IDLE", "READY", "ACTIVE", "COMPLETED", "FAILED"]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     collector_type = models.CharField(max_length=128)

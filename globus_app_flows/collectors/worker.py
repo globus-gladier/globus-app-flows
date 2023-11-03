@@ -27,6 +27,7 @@ class CollectionWorker(SingleThreadedWorker):
         collector_model = batch.collector
         collector_class = get_collector(collector_model.collector_type)
         collector = collector_class(user=collector_model.user, **collector_model.data)
+        collector_model.status = "ACTIVE"
         collector_model.save()
 
         log.debug(f"Started collection for batch {batch}")
