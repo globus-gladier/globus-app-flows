@@ -29,10 +29,10 @@ def get_specific_flow_client(
 
 def get_authorization_function(authorization: FlowAuthorization):
     auth_types = {"CONFIDENTIAL_CLIENT": confidential_client_authorization}
-    atype_auth = auth_types.get(authorization.authorization_key)
+    atype_auth = auth_types.get(authorization.authorization_type)
     if atype_auth is None:
         raise ValueError(
-            "Unable to authorize {flow}, invalid authorizor key {authorization.authorization_key} for flow authorizer {authorization}"
+            f"Unable to authorize {authorization}, invalid authorizor key {authorization.authorization_key}."
         )
     return atype_auth
 
@@ -79,9 +79,10 @@ def confidential_client_authorization(
         or _scopes_mismatch(tokens, flow_scopes)
     ):
         log.info(
-            f"Fetching new tokens for scopes {flow_scopes} under user {user} for authorization {authorization}"
+            f"Fetching new tokens for scopes {flow_scopes} for flows started by user {user} under authorization {authorization}"
         )
-        tokens = refresh_tokens(resource_server, flow_scopes, authorization)
+        new_token_set = refresh_tokens(resource_server, flow_scopes, authorization)
+        tokens = new_token_set[resource_server]
 
     authorizer = globus_sdk.AccessTokenAuthorizer(tokens["access_token"])
     return authorizer
