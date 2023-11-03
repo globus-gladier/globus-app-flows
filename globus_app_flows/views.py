@@ -11,6 +11,7 @@ from django.utils.timezone import timezone
 from django import forms
 
 from globus_portal_framework.gsearch import get_template
+from globus_portal_framework.gclients import get_user_groups
 
 from globus_app_flows.models import Batch, Collector, Flow, FlowAuthorization
 
@@ -39,21 +40,29 @@ class BatchCreateView(FormView):
             raise ValueError(f"Unable to load collector {self}")
         return values
 
+    def _get_user_group(self, user_groups):
+        for group in user_groups:
+            if group["id"] == self.group:
+                return group
+
     def ensure_authorized(self):
+        if not self.group:
+            raise ValueError("'group' must be set on the class {self} in order to authorize flows")
+
         log.debug(f"Checking if user {self.request.user} authorized to run flow...")
         user_groups = get_user_groups(self.request.user)
         try:
-            az_group = next(filter(lambda g: g["id"] == self.group, user_groups))
-            assert any(m["status"] == "active" for m in az_group["my_memberships"])
+            user_group = self._get_user_group(user_groups)
+            assert user_group is not None, f"User is not in group {self.group}"
+            assert any(m["status"] == "active" for m in user_group["my_memberships"])
         except (StopIteration, AssertionError):
             raise ValueError(
                 f"User {self.request.user} is not authorized to run this flow!"
             )
 
     def get(self, request, index, *args, **kwargs):
-        self.ensure_authorized
+        self.ensure_authorized()
         request = super().get(request, *args, **kwargs)
-        log.debug((request, index, args, kwargs))
         col_inst = self.get_collector_class().from_get_request(
             self.request, index, *args, **kwargs
         )
