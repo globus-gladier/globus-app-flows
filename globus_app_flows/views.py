@@ -100,7 +100,7 @@ class BatchCreateView(FormView):
 
     def get_batch(self, authorization, collector, form):
         batch = Batch(
-            name="hello batch",
+            name="Reprocessing Batch",
             user=self.request.user,
             authorization=authorization,
             collector=collector,
