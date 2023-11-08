@@ -121,5 +121,5 @@ class BatchCreateView(FormView):
         batch = self.get_batch(authorization, collector, form)
         batch.save()
 
-        messages.success(self.request, f"Processing data in {batch}")
+        messages.success(self.request, f"Started processing for new flow runs.")
         return response
