@@ -47,7 +47,9 @@ class BatchCreateView(FormView):
 
     def ensure_authorized(self):
         if not self.group:
-            raise ValueError("'group' must be set on the class {self} in order to authorize flows")
+            raise ValueError(
+                "'group' must be set on the class {self} in order to authorize flows"
+            )
 
         log.debug(f"Checking if user {self.request.user} authorized to run flow...")
         user_groups = get_user_groups(self.request.user)

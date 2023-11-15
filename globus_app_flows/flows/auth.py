@@ -14,9 +14,7 @@ def get_flows_client(
 ) -> globus_sdk.FlowsClient:
     scopes = [globus_sdk.FlowsClient.scopes.run_status]
     auth_func = get_authorization_function(authorization)
-    authorizer = auth_func(
-        "flows.globus.org", scopes, authorization, user
-    )
+    authorizer = auth_func("flows.globus.org", scopes, authorization, user)
     return globus_sdk.FlowsClient(authorizer=authorizer)
 
 
@@ -32,7 +30,7 @@ def get_authorization_function(authorization: FlowAuthorization):
     auth_types = {
         "CONFIDENTIAL_CLIENT": confidential_client_authorization,
         "USER": user_authorization,
-        }
+    }
     atype_auth = auth_types.get(authorization.authorization_type)
     if atype_auth is None:
         raise ValueError(
@@ -93,12 +91,15 @@ def confidential_client_authorization(
 
 
 def user_authorization(resource_server, flow_scopes, authorization, user):
-    tokens = settings.GLOBUS_APP_FLOWS_AUTHORIZATIONS["user_token"][authorization.authorization_key]
+    tokens = settings.GLOBUS_APP_FLOWS_AUTHORIZATIONS["user_token"][
+        authorization.authorization_key
+    ]
     log.debug(
         f"Fetching new tokens for scopes {flow_scopes} for flows started by user {user} under authorization {authorization}"
     )
     authorizer = globus_sdk.AccessTokenAuthorizer(tokens[resource_server])
     return authorizer
+
 
 # def get_authorized_flow(flow_id, flow_scope, authorization):
 #     atype = authorization['type']
