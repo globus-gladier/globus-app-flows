@@ -16,9 +16,15 @@ with open("requirements.txt") as reqs:
         install_requires.append(req)
 
 
+with open("README.rst") as f:
+    long_description = f.read()
+
+
 setup(
     name="django_globus_app_flows",
     description="Django Globus App Flows",
+    long_description=long_description,
+    long_description_content_type="text/x-rst",
     url="https://github.com/globus-gladier/gladier",
     maintainer="The Gladier Team",
     maintainer_email="",
