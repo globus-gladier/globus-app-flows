@@ -1,8 +1,8 @@
 Globus App Flows
 ================
 
-.. image:: https://github.com/globus-gladier/globus_app_flows/actions/workflows/unit-tests.yml/badge.svg
-    :target: https://github.com/globus-gladier/globus_app_flows/actions/workflows/
+.. image:: https://github.com/globus-gladier/globus-app-flows/actions/workflows/unit-tests.yaml/badge.svg
+    :target: https://github.com/globus-gladier/globus-app-flows/actions/workflows/
 
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
     :alt: License
