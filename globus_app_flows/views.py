@@ -1,22 +1,11 @@
-from typing import Any, Dict
 import logging
-from django.shortcuts import redirect
 from django.contrib import messages
-from django.urls import reverse
-from django.views.generic import DetailView
 from django.views.generic.edit import FormView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView
-from django.utils.timezone import timezone
 from django import forms
 
-from globus_portal_framework.gsearch import get_template
 from globus_portal_framework.gclients import get_user_groups
 
 from globus_app_flows.models import Batch, Collector, Flow, FlowAuthorization
-
-from django.http import HttpResponse
-from django.views import View
 
 
 log = logging.getLogger(__name__)
@@ -30,7 +19,7 @@ class BatchCreateView(FormView):
     authorization_key = None
 
     def save_temp_collector(self, collector):
-        log.debug(f"Saving collector in SESSION")
+        log.debug("Saving collector in SESSION")
         self.request.session["collector"] = collector.get_metadata()
         log.debug(self.request.session["collector"])
 
@@ -123,5 +112,5 @@ class BatchCreateView(FormView):
         batch = self.get_batch(authorization, collector, form)
         batch.save()
 
-        messages.success(self.request, f"Started processing for new flow runs.")
+        messages.success(self.request, "Started processing for new flow runs.")
         return response

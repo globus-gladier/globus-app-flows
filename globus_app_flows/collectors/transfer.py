@@ -1,6 +1,4 @@
 import logging
-import copy
-import urllib
 from collections import deque
 from django.contrib.auth.models import User
 from globus_app_flows.collectors.collector import Collector
@@ -49,7 +47,7 @@ class TransferCollector(Collector):
         return load_transfer_client(self.user)
 
     def get_item(self):
-        if self.items == None:
+        if self.items is None:
             self.items = deque()
             self.items.append((self.path, "", 0))
             self.items = self._recursive_ls_helper(

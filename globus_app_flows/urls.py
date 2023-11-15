@@ -15,13 +15,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
 
 from django.urls import path, include
 from django.contrib.auth.models import User
 from rest_framework import routers, serializers, viewsets
-
-# from globus_app_flows.views import ReprocessQuery
 
 app_name = "globus_app_flows"
 
@@ -52,10 +49,10 @@ standard_views = [
 urlpatterns = [
     # path('api/', include(router.urls)),
     # path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    # path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
     # # Provides the basic search portal
     # path('', include('globus_portal_framework.urls')),
     # # Provides Login urls for Globus Auth
     # path('', include('social_django.urls', namespace='social')),
-    path("", include(standard_views))
+    path("", include(standard_views)),
 ]

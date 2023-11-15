@@ -32,4 +32,4 @@ class SingleThreadedWorker:
         log.info(f"{self}: Shutdown successful")
 
     def do_work(self):
-        raise NotImplemented(f"{self} has not implemented do_work!")
+        raise NotImplementedError(f"{self} has not implemented do_work!")

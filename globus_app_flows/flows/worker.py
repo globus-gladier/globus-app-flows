@@ -1,13 +1,11 @@
 import logging
 import time
-import traceback
 
 from django.conf import settings
 from django.utils import timezone
 
 from globus_app_flows.worker import SingleThreadedWorker
-from globus_app_flows.models import Batch, Run
-from globus_app_flows.collectors import get_collector
+from globus_app_flows.models import Run
 from globus_app_flows.flows.auth import get_specific_flow_client, get_flows_client
 
 

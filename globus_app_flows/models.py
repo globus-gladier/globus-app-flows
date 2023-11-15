@@ -61,7 +61,7 @@ class Run(models.Model):
             info = f"Started {self.started}"
         else:
             info = f"Completed {self.completed}"
-        return f"{entity}: {self.status} | {self.completed}"
+        return f"{entity}: {self.status} | {info}"
 
     @property
     def run_input(self):

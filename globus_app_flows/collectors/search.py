@@ -1,6 +1,5 @@
 import logging
 import copy
-import urllib
 from globus_app_flows.collectors.collector import Collector
 from globus_portal_framework import gsearch
 from globus_portal_framework.gclients import load_search_client
@@ -55,7 +54,7 @@ class SearchCollector(Collector):
         )
 
     def get_item(self):
-        if self.items == None:
+        if self.items is None:
             self.items = iter(self.search_data["gmeta"])
         return next(self.items)
 

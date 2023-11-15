@@ -19,7 +19,6 @@ class CollectionWorker(SingleThreadedWorker):
                 batch.status = "READY"
                 batch.save()
             except Exception as e:
-                raise
                 log.exception(e)
                 log.error(f"Failed to collect for batch {batch}")
 
@@ -42,7 +41,7 @@ class CollectionWorker(SingleThreadedWorker):
             try:
                 run.run_input = collector.get_run_input(item, batch.form)
                 if run.run_input is None:
-                    log.debug(f"Run input for item is NONE, skipping...")
+                    log.debug("Run input for item is NONE, skipping...")
                     continue
                 start_kwargs = collector.get_run_start_kwargs(item, batch.form)
                 if "label" in start_kwargs:
@@ -63,4 +62,4 @@ class CollectionWorker(SingleThreadedWorker):
 
         collector_model.status = "SUCCEEDED"
         collector_model.save()
-        log.debug(f"Worker tick: Finished searching for batches.")
+        log.debug("Worker tick: Finished searching for batches.")
